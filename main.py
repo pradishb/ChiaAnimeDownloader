@@ -36,7 +36,6 @@ def urlopen_with_retry(url):
 link = open("links.txt","w")
 link_list = ""
 anime = input("Enter anime name : ")
-print("Note that the episode may differ according to serial no. of episodes.")
 start = int(input("Enter starting episode : "))
 end = int(input("Enter ending episode : "))
 print()
@@ -57,11 +56,20 @@ anime_list_soup = BeautifulSoup(s, "html.parser")
 anime_list = anime_list_soup.find_all('option')
 anime_list = list(reversed(anime_list))
 
-url = "http://m2.chia-anime.tv/view/"+ anime_list[start-1]['value']
+episode_list = {}
+
+for num, st in enumerate(anime_list):
+    numbers = [int(s) for s in st['value'].split('-') if s.isdigit()]
+    for episode in numbers:
+        episode_list[episode] = num
+
+
+
 
 for episode in range(start,end+1):
     print("Parsing Episode " + str(episode) + "...")
 
+    url = "http://m2.chia-anime.tv/view/" + anime_list[episode_list[episode]]['value']
     print("Opening URL (" + url + ")...")
 
     while(True):
@@ -98,10 +106,6 @@ for episode in range(start,end+1):
     link_list = link_list + links['href'] + "\n"
     link.write(links['href']+"\n")
     link.flush()
-
-    print("Finding next link...")
-    next_link = soup.find('a', string="Next")
-    url = "http://m2.chia-anime.tv" + next_link['href']
 
     print()
 
