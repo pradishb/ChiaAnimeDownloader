@@ -1,10 +1,10 @@
 import urllib.request
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 import time
 from functools import wraps
 from bs4 import BeautifulSoup
 import pyperclip
+import js2py
+import re
 
 def retry(tries=4, delay=3, backoff=2, logger=None):
     def deco_retry(f):
@@ -40,6 +40,7 @@ def string_from_url(url):
             return s
         except:
             print("Connection Timeout...")
+
 
 link = open("links.txt","w")
 link_list = ""
@@ -77,6 +78,10 @@ for num, st in enumerate(anime_list):
 
 print()
 
+pa = open("pa.js", "r")
+pasc = pa.read()
+pa.close()
+
 for episode in range(start,end+1):
     print("Parsing Episode " + str(episode) + "...")
 
@@ -85,40 +90,30 @@ for episode in range(start,end+1):
 
     s = string_from_url(url)
 
-    print("Writing to temporary file...")
-    f = open("temp.html","w")
-    f.write(s.decode("utf-8") )
-    f.close()
+    soup = BeautifulSoup(s, 'html.parser')
+    scripts = soup.find_all('script')
+    for script in scripts:
+        if "document|" in script.text:
+            video_id = re.findall('[0-9a-zA-Z]{60,200}',script.text)
 
-    print("Opening Firefox...")
+            context = js2py.EvalJs()
 
-    options = Options()
-    options.add_argument('-headless')
+            sc = "var ved=re(\"" + video_id[0] + "\",t);" \
+                 "var od=vsd.d(''+ved+'');" \
+                 "var sed=re(\"\"+od+\"\",e);"
 
-    firefox_profile = webdriver.FirefoxProfile()
-    firefox_profile.set_preference('permissions.default.image', 2)
-    firefox_profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
+            context.execute(pasc + sc)
+            download_link = context.sed.split('\0', 1)[0] + "?download=yes&title=" + search_result[choose].text.replace(' ', '-') + "-Episode-" + str(episode) + ".mp4"
 
-    driver = webdriver.Firefox(firefox_profile=firefox_profile, firefox_options=options)
+            print("Download Link : " + download_link)
+            print()
 
-    driver.get(r'file:///C:/Users/pradish/PycharmProjects/ChiaAnimieDownloader/temp.html')
-
-    print("Opening BeautifulSoup...")
-    soup = BeautifulSoup(driver.page_source, "html.parser")
-    links = soup.find('a', string="Download ")
-
-    print("Writing to file...")
-    print(links['href'])
-    link_list = link_list + links['href'] + "\n"
-    link.write(links['href']+"\n")
-    link.flush()
-
-    print()
-
-    driver.close()
+            link_list = link_list + download_link + "\n"
+            link.write(link_list + "\n")
+            link.flush()
 
 link.close()
 print("Copying link list to clipboard...")
 pyperclip.copy(link_list)
-print("\n All Done.")
+print("\nAll Done.")
 
