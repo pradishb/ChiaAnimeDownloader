@@ -33,28 +33,40 @@ def retry(tries=4, delay=3, backoff=2, logger=None):
 def urlopen_with_retry(url):
     return urllib.request.urlopen(url, timeout=10)
 
+def string_from_url(url):
+    while (True):
+        try:
+            s = urlopen_with_retry(url).read()
+            return s
+        except:
+            print("Connection Timeout...")
+
 link = open("links.txt","w")
 link_list = ""
 anime = input("Enter anime name : ")
+
+print("Searching for anime...")
+
+s = string_from_url("http://m2.chia-anime.tv/catlist.php?tags=" + anime)
+
+soup = BeautifulSoup(s, "html.parser")
+search_result = soup.find_all('div', {"class" : "title"})
+
+[print(str(i) + ". " + anime.text) for i, anime in enumerate(search_result)]
+
+choose = int(input("Choose the anime : "))
 start = int(input("Enter starting episode : "))
 end = int(input("Enter ending episode : "))
 print()
 
-anime_url = "http://m2.chia-anime.tv/show/" + anime
+anime_url = "http://m2.chia-anime.tv" + search_result[choose].find('a')['href']
 
 print("Opening URL (" + anime_url + ")...")
+s = string_from_url(anime_url)
 
-s = ""
-while (True):
-    try:
-        s = urlopen_with_retry(anime_url).read()
-        break
-    except:
-        print("Connection Timeout...")
-
-anime_list_soup = BeautifulSoup(s, "html.parser")
-anime_list = anime_list_soup.find_all('option')
-anime_list = list(reversed(anime_list))
+print("Getting anime episode list...")
+soup = BeautifulSoup(s, "html.parser")
+anime_list = soup.find_all('option')
 
 episode_list = {}
 
@@ -63,8 +75,7 @@ for num, st in enumerate(anime_list):
     for episode in numbers:
         episode_list[episode] = num
 
-
-
+print()
 
 for episode in range(start,end+1):
     print("Parsing Episode " + str(episode) + "...")
@@ -72,12 +83,7 @@ for episode in range(start,end+1):
     url = "http://m2.chia-anime.tv/view/" + anime_list[episode_list[episode]]['value']
     print("Opening URL (" + url + ")...")
 
-    while(True):
-        try:
-            s = urlopen_with_retry(url).read()
-            break
-        except:
-            print("Connection Timeout...")
+    s = string_from_url(url)
 
     print("Writing to temporary file...")
     f = open("temp.html","w")
