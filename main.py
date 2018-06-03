@@ -1,4 +1,3 @@
-from urllib.request import urlopen
 import urllib.request
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -37,11 +36,28 @@ def urlopen_with_retry(url):
 link = open("links.txt","w")
 link_list = ""
 anime = input("Enter anime name : ")
+print("Note that the episode may differ according to serial no. of episodes.")
 start = int(input("Enter starting episode : "))
 end = int(input("Enter ending episode : "))
 print()
 
-url = "http://m2.chia-anime.tv/view/"+ anime + "-" + str(start)
+anime_url = "http://m2.chia-anime.tv/show/" + anime
+
+print("Opening URL (" + anime_url + ")...")
+
+s = ""
+while (True):
+    try:
+        s = urlopen_with_retry(anime_url).read()
+        break
+    except:
+        print("Connection Timeout...")
+
+anime_list_soup = BeautifulSoup(s, "html.parser")
+anime_list = anime_list_soup.find_all('option')
+anime_list = list(reversed(anime_list))
+
+url = "http://m2.chia-anime.tv/view/"+ anime_list[start-1]['value']
 
 for episode in range(start,end+1):
     print("Parsing Episode " + str(episode) + "...")
