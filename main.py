@@ -85,7 +85,7 @@ pa.close()
 for episode in range(start,end+1):
     print("Parsing Episode " + str(episode) + "...")
 
-    url = "http://m2.chia-anime.tv/view/" + anime_list[episode_list[episode]]['value']
+    url = "http://m2.chia-anime.tv/mw.php?id=" + anime_list[episode_list[episode]]['value'] + "&submit=Watch"
     print("Opening URL (" + url + ")...")
 
     s = string_from_url(url)
