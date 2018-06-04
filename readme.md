@@ -1,6 +1,8 @@
 # Chia-Animie Downloader
 It is a simple tool that generates the downloadable links list from chia-anime written in python 3.6.
- 
+
+### Demo
+![demo](https://media.giphy.com/media/46zqYfWtOBGFudhBVp/giphy.gif)
 
 ### Dependencies
 1. js2py
