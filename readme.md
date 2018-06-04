@@ -5,4 +5,11 @@ It is a simple tool that generates the downloadable links list from chia-anime w
 ### Dependencies
 1. js2py
 2. BeautifulSoup
-3. paperclip
+3. pyperclip
+
+### Download Dependencies
+```buildoutcfg
+pip install js2py
+pip install beautifulsoup4
+pip install pyperclip
+```
